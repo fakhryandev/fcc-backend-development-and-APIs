@@ -4,6 +4,7 @@ const cors = require("cors");
 const app = express();
 const mongoose = require("mongoose");
 const randomstring = require("randomstring");
+const dns = require("dns");
 
 // Basic Configuration
 const port = process.env.PORT || 3000;
@@ -51,10 +52,19 @@ app.get("/api/hello", function (req, res) {
 app.post("/api/shorturl", (req, res) => {
   const origUrl = req.body.url;
 
-  createAndSave(origUrl, (data) => {
-    return res.json({
-      original_url: data.origUrl,
-      short_url: data.shortUrl,
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  dns.lookup(origUrl.replace(urlRegex, ""), (err, address) => {
+    if (err) {
+      return res.json({
+        error: "invalid URL",
+      });
+    }
+
+    createAndSave(origUrl, (data) => {
+      return res.json({
+        original_url: data.origUrl,
+        short_url: data.shortUrl,
+      });
     });
   });
 });
@@ -69,24 +79,25 @@ app.get("/api/shorturl/:short", (req, res) => {
 function createAndSave(origUrl, done) {
   findOneByOrig(origUrl, (data) => {
     if (data) done(data);
-  });
+    if (!data) {
+      const randomString = randomstring.generate(8);
 
-  const randomString = randomstring.generate(8);
-
-  const newShortURL = new URLShorter({
-    origUrl,
-    shortUrl: randomString,
-  });
-
-  newShortURL
-    .save()
-    .then((data) => done(data))
-    .catch((err) => {
-      console.log(err);
-      return res.json({
-        message: err.message,
+      const newShortURL = new URLShorter({
+        origUrl,
+        shortUrl: randomString,
       });
-    });
+
+      newShortURL
+        .save()
+        .then((data) => done(data))
+        .catch((err) => {
+          console.log(err);
+          return res.json({
+            message: err.message,
+          });
+        });
+    }
+  });
 }
 
 function findOneByShort(short, done) {
