@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 const mongoose = require("mongoose");
-// const { nanoid } = require("nanoid");
+const randomstring = require("randomstring");
 
 // Basic Configuration
 const port = process.env.PORT || 3000;
@@ -52,8 +52,7 @@ app.post("/api/shorturl", (req, res) => {
   const origUrl = req.body.url;
 
   createAndSave(origUrl, (data) => {
-    console.log(data);
-    res.json({
+    return res.json({
       original_url: data.origUrl,
       short_url: data.shortUrl,
     });
@@ -69,26 +68,25 @@ app.get("/api/shorturl/:short", (req, res) => {
 
 function createAndSave(origUrl, done) {
   findOneByOrig(origUrl, (data) => {
-    if (data) {
-      done(data);
-    }
+    if (data) done(data);
   });
-  // const randomString = nanoid(8);
 
-  // const newShortURL = new URLShorter({
-  //   origUrl,
-  //   shortUrl: randomString,
-  // });
+  const randomString = randomstring.generate(8);
 
-  // newShortURL
-  //   .save()
-  //   .then((data) => done(data))
-  //   .catch((err) => {
-  //     console.log(err);
-  //     res.json({
-  //       message: err.message,
-  //     });
-  //   });
+  const newShortURL = new URLShorter({
+    origUrl,
+    shortUrl: randomString,
+  });
+
+  newShortURL
+    .save()
+    .then((data) => done(data))
+    .catch((err) => {
+      console.log(err);
+      return res.json({
+        message: err.message,
+      });
+    });
 }
 
 function findOneByShort(short, done) {
@@ -99,7 +97,7 @@ function findOneByShort(short, done) {
       done(data);
     })
     .catch((err) => {
-      res.json({
+      return res.json({
         message: err.message,
       });
     });
