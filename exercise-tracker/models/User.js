@@ -9,6 +9,12 @@ const userSchema = new Schema({
     unique: true,
     minLength: 8,
   },
+  exercises: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Exercise",
+    },
+  ],
 });
 
 module.exports = mongoose.model("User", userSchema);

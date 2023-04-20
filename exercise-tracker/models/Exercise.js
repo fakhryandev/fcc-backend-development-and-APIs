@@ -15,10 +15,6 @@ const exerciseSchema = new Schema({
     type: Date,
     default: Date.now,
   },
-  userID: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-  },
 });
 
 module.exports = mongoose.model("Exercise", exerciseSchema);
