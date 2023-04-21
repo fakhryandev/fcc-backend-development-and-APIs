@@ -48,14 +48,15 @@ exports.get_exercise = async (req, res) => {
       return res.json({ message: "User not found" });
     }
 
-    const from = new Date(req.query.from);
-    const to = new Date(req.query.to);
-    const limit = parseInt(req.query.limit);
+    const from = req.query.from ? new Date(req.query.from) : null;
+    const to = req.query.to ? new Date(req.query.to) : null;
+    const limit = req.query.limit ?? user.exercises.length;
 
     const exercises = user.exercises
-      .filter((exercise) => {
-        (!from || exercise.date >= from) && (!to || exercise.date <= to);
-      })
+      .filter(
+        (exercise) =>
+          (!from || exercise.date >= from) && (!to || exercise.date <= to)
+      )
       .slice(0, limit);
 
     res.json({
